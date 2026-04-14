@@ -1,13 +1,14 @@
 package com.example.todo.todo;
 
 import com.example.todo.common.NotFoundException;
-import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 public class TodoService {
 
   private final TodoRepository repository;
@@ -16,11 +17,11 @@ public class TodoService {
     this.repository = repository;
   }
 
-  @Transactional(readOnly = true)
-  public List<Todo> list(UUID userId) {
-    return repository.findByUserIdOrderByCreatedAtDesc(userId);
+  public Page<Todo> list(UUID userId, Pageable pageable) {
+    return repository.findByUserId(userId, pageable);
   }
 
+  @Transactional
   public Todo create(UUID userId, TodoDtos.CreateRequest req) {
     Todo todo =
         Todo.builder()
@@ -33,6 +34,7 @@ public class TodoService {
     return repository.save(todo);
   }
 
+  @Transactional
   public Todo update(UUID userId, UUID id, TodoDtos.UpdateRequest req) {
     Todo existing =
         repository
@@ -45,6 +47,7 @@ public class TodoService {
     return repository.save(existing);
   }
 
+  @Transactional
   public void delete(UUID userId, UUID id) {
     Todo existing =
         repository

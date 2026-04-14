@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 public class AuthService {
 
   private final UserRepository userRepository;
@@ -23,6 +23,7 @@ public class AuthService {
     this.jwtService = jwtService;
   }
 
+  @Transactional
   public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest req) {
     if (userRepository.existsByEmail(req.email())) {
       throw new ConflictException("Email already registered");
@@ -34,12 +35,11 @@ public class AuthService {
             .displayName(req.displayName())
             .build();
     User saved = userRepository.save(user);
-    String token = jwtService.issue(saved.getId(), saved.getEmail());
+    String token = jwtService.issue(saved.getId(), saved.getEmail(), saved.getDisplayName());
     return new AuthDtos.AuthResponse(
         token, new AuthDtos.UserView(saved.getId(), saved.getEmail(), saved.getDisplayName()));
   }
 
-  @Transactional(readOnly = true)
   public AuthDtos.AuthResponse login(AuthDtos.LoginRequest req) {
     User user =
         userRepository
@@ -48,7 +48,7 @@ public class AuthService {
     if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
       throw new BadCredentialsException("Invalid credentials");
     }
-    String token = jwtService.issue(user.getId(), user.getEmail());
+    String token = jwtService.issue(user.getId(), user.getEmail(), user.getDisplayName());
     return new AuthDtos.AuthResponse(
         token, new AuthDtos.UserView(user.getId(), user.getEmail(), user.getDisplayName()));
   }

@@ -32,11 +32,12 @@ public class JwtService {
     this.key = Keys.hmacShaKeyFor(bytes);
   }
 
-  public String issue(UUID userId, String email) {
+  public String issue(UUID userId, String email, String displayName) {
     Instant now = Instant.now();
     return Jwts.builder()
         .subject(userId.toString())
         .claim("email", email)
+        .claim("displayName", displayName)
         .issuedAt(Date.from(now))
         .expiration(Date.from(now.plusMillis(expirationMs)))
         .signWith(key)

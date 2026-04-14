@@ -67,10 +67,11 @@ class TodoFlowIT extends AbstractIntegrationTest {
         .andExpect(jsonPath("$.data.done").value(true));
 
     mvc.perform(delete("/api/todos/" + id).header("Authorization", auth))
-        .andExpect(status().isOk());
+        .andExpect(status().isNoContent());
 
     mvc.perform(get("/api/todos").header("Authorization", auth))
-        .andExpect(jsonPath("$.data.length()").value(0));
+        .andExpect(jsonPath("$.data.length()").value(0))
+        .andExpect(jsonPath("$.meta.total").value(0));
   }
 
   @Test
