@@ -9,8 +9,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 30_000,
-            refetchOnWindowFocus: false,
+            // Rely on mutation-driven invalidation for freshness; refetch on
+            // focus catches changes from other tabs / background updates.
+            staleTime: 0,
+            refetchOnWindowFocus: true,
             retry: 1,
           },
         },
