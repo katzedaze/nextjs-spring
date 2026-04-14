@@ -41,6 +41,9 @@ export async function serverFetch<T extends z.ZodTypeAny>(
     body: body === undefined ? undefined : JSON.stringify(body),
     cache: "no-store",
   });
+  if (res.status === 204) {
+    return null as z.infer<T>;
+  }
   const text = await res.text();
   const json: unknown = text
     ? JSON.parse(text)

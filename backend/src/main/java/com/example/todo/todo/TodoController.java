@@ -5,6 +5,10 @@ import com.example.todo.config.AuthenticatedUser;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/todos")
 public class TodoController {
+
+  private static final int DEFAULT_PAGE_SIZE = 50;
+  private static final int MAX_PAGE_SIZE = 200;
 
   private final TodoService service;
 
@@ -21,10 +28,18 @@ public class TodoController {
 
   @GetMapping
   public ApiResponse<List<TodoDtos.TodoResponse>> list(
-      @AuthenticationPrincipal AuthenticatedUser user) {
+      @AuthenticationPrincipal AuthenticatedUser user,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE) int size) {
+    int safeSize = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
+    int safePage = Math.max(page, 0);
+    Pageable pageable =
+        PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+    Page<Todo> result = service.list(user.id(), pageable);
     List<TodoDtos.TodoResponse> items =
-        service.list(user.id()).stream().map(TodoDtos.TodoResponse::from).toList();
-    return ApiResponse.ok(items);
+        result.getContent().stream().map(TodoDtos.TodoResponse::from).toList();
+    return ApiResponse.ok(
+        items, new ApiResponse.Meta(result.getTotalElements(), safePage, safeSize));
   }
 
   @PostMapping
@@ -45,9 +60,9 @@ public class TodoController {
   }
 
   @DeleteMapping("/{id}")
-  public ApiResponse<Void> delete(
+  public ResponseEntity<Void> delete(
       @AuthenticationPrincipal AuthenticatedUser user, @PathVariable UUID id) {
     service.delete(user.id(), id);
-    return ApiResponse.ok(null);
+    return ResponseEntity.noContent().build();
   }
 }

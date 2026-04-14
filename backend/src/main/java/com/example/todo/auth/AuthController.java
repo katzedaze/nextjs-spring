@@ -30,6 +30,6 @@ public class AuthController {
 
   @GetMapping("/me")
   public ApiResponse<AuthDtos.UserView> me(@AuthenticationPrincipal AuthenticatedUser user) {
-    return ApiResponse.ok(new AuthDtos.UserView(user.id(), user.email(), user.email()));
+    return ApiResponse.ok(new AuthDtos.UserView(user.id(), user.email(), user.displayName()));
   }
 }

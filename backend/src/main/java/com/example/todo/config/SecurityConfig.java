@@ -21,6 +21,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 public class SecurityConfig {
 
+  @Bean
+  public RateLimitFilter rateLimitFilter() {
+    return new RateLimitFilter();
+  }
+
   @Value("${app.cors.allowed-origins}")
   private String allowedOrigins;
 
@@ -59,6 +64,7 @@ public class SecurityConfig {
                           res.setContentType(MediaType.APPLICATION_JSON_VALUE);
                           mapper.writeValue(res.getOutputStream(), ApiResponse.fail("Forbidden"));
                         }))
+        .addFilterBefore(rateLimitFilter(), UsernamePasswordAuthenticationFilter.class)
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
     return http.build();
   }
@@ -67,7 +73,8 @@ public class SecurityConfig {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
     config.setAllowedMethods(List.of("GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"));
-    config.setAllowedHeaders(List.of("*"));
+    config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+    config.setExposedHeaders(List.of("Authorization"));
     config.setAllowCredentials(true);
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", config);
