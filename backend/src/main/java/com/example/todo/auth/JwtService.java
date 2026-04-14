@@ -15,6 +15,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class JwtService {
 
+  private static final String ISSUER = "todo-app";
+  private static final String AUDIENCE = "todo-api";
+
   @Value("${app.jwt.secret}")
   private String secret;
 
@@ -35,6 +38,10 @@ public class JwtService {
   public String issue(UUID userId, String email, String displayName) {
     Instant now = Instant.now();
     return Jwts.builder()
+        .issuer(ISSUER)
+        .audience()
+        .add(AUDIENCE)
+        .and()
         .subject(userId.toString())
         .claim("email", email)
         .claim("displayName", displayName)
@@ -45,6 +52,12 @@ public class JwtService {
   }
 
   public Claims parse(String token) {
-    return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+    return Jwts.parser()
+        .verifyWith(key)
+        .requireIssuer(ISSUER)
+        .requireAudience(AUDIENCE)
+        .build()
+        .parseSignedClaims(token)
+        .getPayload();
   }
 }

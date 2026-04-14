@@ -6,14 +6,19 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 
+/**
+ * Singleton-container pattern: one PostgreSQL container per JVM, wired via {@link
+ * DynamicPropertySource}. The idiomatic {@code @Testcontainers} + {@code @Container} on an abstract
+ * superclass stops/starts the container between subclasses, which broke the second test class here
+ * (connection refused). Keep the manual {@code static { POSTGRES.start(); }} block instead; the JVM
+ * shuts it down on exit.
+ */
 @SpringBootTest
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
 
-  // Singleton container shared across all test classes to avoid repeated
-  // start/stop between Spring test contexts.
   private static final PostgreSQLContainer<?> POSTGRES =
-      new PostgreSQLContainer<>("postgres:17-alpine").withReuse(false);
+      new PostgreSQLContainer<>("postgres:17-alpine");
 
   static {
     POSTGRES.start();
