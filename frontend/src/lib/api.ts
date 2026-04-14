@@ -1,4 +1,6 @@
 import { cookies } from "next/headers";
+import { z } from "zod";
+import { apiEnvelope } from "./schemas";
 
 export const TOKEN_COOKIE = "todo_token";
 
@@ -6,8 +8,6 @@ const internalBase = () =>
   process.env.API_INTERNAL_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   "http://localhost:8080";
-
-type ApiEnvelope<T> = { success: boolean; data: T | null; error: string | null };
 
 export class ApiError extends Error {
   status: number;
@@ -17,11 +17,17 @@ export class ApiError extends Error {
   }
 }
 
-export async function serverFetch<T>(
+type FetchOptions<T extends z.ZodTypeAny> = Omit<RequestInit, "body"> & {
+  auth?: boolean;
+  body?: unknown;
+  schema: T;
+};
+
+export async function serverFetch<T extends z.ZodTypeAny>(
   path: string,
-  init: RequestInit & { auth?: boolean } = {},
-): Promise<T> {
-  const { auth = true, headers, ...rest } = init;
+  options: FetchOptions<T>,
+): Promise<z.infer<T>> {
+  const { auth = true, schema, body, headers, method = "GET", ...rest } = options;
   const finalHeaders = new Headers(headers);
   finalHeaders.set("Content-Type", "application/json");
   if (auth) {
@@ -30,15 +36,21 @@ export async function serverFetch<T>(
   }
   const res = await fetch(`${internalBase()}${path}`, {
     ...rest,
+    method,
     headers: finalHeaders,
+    body: body === undefined ? undefined : JSON.stringify(body),
     cache: "no-store",
   });
   const text = await res.text();
-  const envelope: ApiEnvelope<T> = text
+  const json: unknown = text
     ? JSON.parse(text)
-    : { success: false, data: null, error: "empty" };
-  if (!res.ok || !envelope.success) {
-    throw new ApiError(envelope.error ?? `Request failed: ${res.status}`, res.status);
+    : { success: false, data: null, error: "empty response" };
+  const envelope = apiEnvelope(schema).safeParse(json);
+  if (!envelope.success) {
+    throw new ApiError(`Invalid API response: ${envelope.error.message}`, res.status);
   }
-  return envelope.data as T;
+  if (!res.ok || !envelope.data.success) {
+    throw new ApiError(envelope.data.error ?? `Request failed: ${res.status}`, res.status);
+  }
+  return (envelope.data.data ?? null) as z.infer<T>;
 }
