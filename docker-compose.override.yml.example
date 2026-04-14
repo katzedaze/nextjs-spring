@@ -1,0 +1,6 @@
+# Copy to `docker-compose.override.yml` to expose ports for local debugging.
+# Compose picks up `docker-compose.override.yml` automatically.
+services:
+  postgres:
+    ports:
+      - "5432:5432"

@@ -22,6 +22,7 @@ export async function loginAction(_prev: ActionState, formData: FormData): Promi
       body: parsed.data,
       schema: authResponseSchema,
     });
+    if (!data) throw new Error("Empty login response");
     await setSessionCookie(data.token);
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Login failed" };
@@ -45,6 +46,7 @@ export async function registerAction(_prev: ActionState, formData: FormData): Pr
       body: parsed.data,
       schema: authResponseSchema,
     });
+    if (!data) throw new Error("Empty register response");
     await setSessionCookie(data.token);
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Register failed" };

@@ -13,11 +13,20 @@ public class TodoDtos {
       @Size(max = 10000) String description,
       LocalDate dueDate) {}
 
+  /**
+   * Partial update payload.
+   *
+   * <p>Non-null fields replace the stored value. To <strong>clear</strong> a nullable field, set
+   * the corresponding {@code clearXxx} flag to {@code true}; it takes precedence over any value set
+   * in the same request.
+   */
   public record UpdateRequest(
       @Size(max = 255) String title,
       @Size(max = 10000) String description,
       Boolean done,
-      LocalDate dueDate) {}
+      LocalDate dueDate,
+      Boolean clearDescription,
+      Boolean clearDueDate) {}
 
   public record TodoResponse(
       UUID id,

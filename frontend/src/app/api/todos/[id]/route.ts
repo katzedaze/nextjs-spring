@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { ApiError, serverFetch } from "@/lib/api";
+import { serverFetch } from "@/lib/api";
 import { todoSchema, updateTodoSchema } from "@/lib/schemas";
+import { badRequest, errorResponse } from "@/lib/route-helpers";
 
 const paramsSchema = z.object({ id: z.string().uuid() });
 
@@ -39,21 +40,8 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
       method: "DELETE",
       schema: z.null(),
     });
-    return NextResponse.json({ success: true, data: null, error: null });
+    return new NextResponse(null, { status: 204 });
   } catch (e) {
     return errorResponse(e);
   }
-}
-
-function badRequest(message: string) {
-  return NextResponse.json({ success: false, data: null, error: message }, { status: 400 });
-}
-
-function errorResponse(e: unknown) {
-  const status = e instanceof ApiError ? e.status : 500;
-  const message = e instanceof Error ? e.message : "unknown error";
-  return NextResponse.json(
-    { success: false, data: null, error: message },
-    { status: status === 0 ? 500 : status },
-  );
 }

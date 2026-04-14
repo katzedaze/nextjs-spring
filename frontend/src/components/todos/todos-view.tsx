@@ -37,15 +37,15 @@ export function TodosView() {
     onError: (e) => setFormError(e instanceof Error ? e.message : "作成に失敗しました"),
   });
 
-  const toggleMutation = useMutation({
+  const updateMutation = useMutation({
     mutationFn: clientApi.updateTodo,
-    onMutate: async ({ id, done }) => {
+    onMutate: async ({ id, ...patch }) => {
       await qc.cancelQueries({ queryKey: TODOS_KEY });
       const previous = qc.getQueryData<Todo[]>(TODOS_KEY);
-      if (previous && typeof done === "boolean") {
+      if (previous) {
         qc.setQueryData<Todo[]>(
           TODOS_KEY,
-          previous.map((t) => (t.id === id ? { ...t, done } : t)),
+          previous.map((t) => (t.id === id ? { ...t, ...patch } : t)),
         );
       }
       return { previous };
@@ -127,7 +127,7 @@ export function TodosView() {
               <Card key={t.id} className="flex items-center gap-3 p-3">
                 <Checkbox
                   checked={t.done}
-                  onChange={(e) => toggleMutation.mutate({ id: t.id, done: e.target.checked })}
+                  onChange={(e) => updateMutation.mutate({ id: t.id, done: e.target.checked })}
                 />
                 <span
                   className={cn(
