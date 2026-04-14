@@ -81,13 +81,23 @@ describe("apiEnvelope factory", () => {
   const envelope = apiEnvelope(z.object({ v: z.number() }));
 
   it("parses success envelope", () => {
-    const r = envelope.parse({ success: true, data: { v: 1 }, error: null });
+    const r = envelope.parse({ success: true, data: { v: 1 } });
     expect(r.data?.v).toBe(1);
   });
 
-  it("parses error envelope with null data", () => {
-    const r = envelope.parse({ success: false, data: null, error: "nope" });
+  it("parses error envelope with omitted data", () => {
+    const r = envelope.parse({ success: false, error: "nope" });
     expect(r.success).toBe(false);
     expect(r.error).toBe("nope");
+    expect(r.data).toBeUndefined();
+  });
+
+  it("parses envelope with meta", () => {
+    const r = envelope.parse({
+      success: true,
+      data: { v: 1 },
+      meta: { total: 10, page: 0, size: 50 },
+    });
+    expect(r.meta?.total).toBe(10);
   });
 });

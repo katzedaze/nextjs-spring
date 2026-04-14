@@ -41,9 +41,17 @@ public class TodoService {
             .findByIdAndUserId(id, userId)
             .orElseThrow(() -> new NotFoundException("Todo not found"));
     if (req.title() != null) existing.setTitle(req.title());
-    if (req.description() != null) existing.setDescription(req.description());
+    if (Boolean.TRUE.equals(req.clearDescription())) {
+      existing.setDescription(null);
+    } else if (req.description() != null) {
+      existing.setDescription(req.description());
+    }
     if (req.done() != null) existing.setDone(req.done());
-    if (req.dueDate() != null) existing.setDueDate(req.dueDate());
+    if (Boolean.TRUE.equals(req.clearDueDate())) {
+      existing.setDueDate(null);
+    } else if (req.dueDate() != null) {
+      existing.setDueDate(req.dueDate());
+    }
     return repository.save(existing);
   }
 

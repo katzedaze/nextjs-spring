@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { ApiError, serverFetch } from "@/lib/api";
+import { serverFetch } from "@/lib/api";
 import { createTodoSchema, todoListSchema, todoSchema } from "@/lib/schemas";
+import { badRequest, errorResponse } from "@/lib/route-helpers";
 
 export async function GET() {
   try {
@@ -16,17 +17,11 @@ export async function POST(request: Request) {
   try {
     rawBody = await request.json();
   } catch {
-    return NextResponse.json(
-      { success: false, data: null, error: "Invalid JSON" },
-      { status: 400 },
-    );
+    return badRequest("Invalid JSON");
   }
   const parsed = createTodoSchema.safeParse(rawBody);
   if (!parsed.success) {
-    return NextResponse.json(
-      { success: false, data: null, error: parsed.error.issues[0]?.message ?? "validation failed" },
-      { status: 400 },
-    );
+    return badRequest(parsed.error.issues[0]?.message ?? "validation failed");
   }
   try {
     const created = await serverFetch("/api/todos", {
@@ -38,13 +33,4 @@ export async function POST(request: Request) {
   } catch (e) {
     return errorResponse(e);
   }
-}
-
-function errorResponse(e: unknown) {
-  const status = e instanceof ApiError ? e.status : 500;
-  const message = e instanceof Error ? e.message : "unknown error";
-  return NextResponse.json(
-    { success: false, data: null, error: message },
-    { status: status === 0 ? 500 : status },
-  );
 }
