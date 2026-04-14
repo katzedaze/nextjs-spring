@@ -1,0 +1,6 @@
+app:
+  jwt:
+    secret: test-secret-please-change-me-to-a-long-random-string-at-least-32-bytes
+    expiration-ms: 3600000
+  cors:
+    allowed-origins: http://localhost:3000

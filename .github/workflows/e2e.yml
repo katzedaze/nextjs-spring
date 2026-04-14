@@ -1,0 +1,71 @@
+name: e2e-smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "docker-compose.yml"
+      - ".github/workflows/e2e.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: docker compose up + curl smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy env
+        run: cp .env.example .env
+
+      - name: Build and start
+        run: docker compose up -d --build
+
+      - name: Wait for backend
+        run: |
+          for i in $(seq 1 40); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/todos || echo 000)
+            if [ "$code" = "401" ]; then echo "backend ok"; exit 0; fi
+            sleep 3
+          done
+          echo "backend not ready" >&2
+          docker compose logs backend
+          exit 1
+
+      - name: Wait for frontend
+        run: |
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/login || echo 000)
+            if [ "$code" = "200" ]; then echo "frontend ok"; exit 0; fi
+            sleep 3
+          done
+          echo "frontend not ready" >&2
+          docker compose logs frontend
+          exit 1
+
+      - name: API smoke (register + create todo)
+        run: |
+          set -euo pipefail
+          EMAIL="ci+$(date +%s)@example.com"
+          TOKEN=$(curl -sS -X POST http://localhost:8080/api/auth/register \
+            -H 'Content-Type: application/json' \
+            -d "{\"email\":\"$EMAIL\",\"password\":\"password123\",\"displayName\":\"CI\"}" \
+            | python3 -c 'import sys,json;print(json.load(sys.stdin)["data"]["token"])')
+          curl -sS -X POST http://localhost:8080/api/todos \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d '{"title":"hello"}' | grep -q '"success":true'
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
