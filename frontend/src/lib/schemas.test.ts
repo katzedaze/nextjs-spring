@@ -92,6 +92,11 @@ describe("apiEnvelope factory", () => {
     expect(r.data).toBeUndefined();
   });
 
+  it("tolerates explicit null fields (Next.js proxy emits error: null)", () => {
+    const r = envelope.parse({ success: true, data: { v: 1 }, error: null });
+    expect(r.error).toBeNull();
+  });
+
   it("parses envelope with meta", () => {
     const r = envelope.parse({
       success: true,

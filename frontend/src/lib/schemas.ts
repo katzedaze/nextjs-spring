@@ -46,14 +46,14 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-// Envelope matches the backend's @JsonInclude(NON_NULL): absent fields are
-// modelled as optional rather than coerced to null.
+// Accept both absent (backend `@JsonInclude(NON_NULL)`) and explicit null
+// (Next.js proxy handlers emit `error: null` / `data: null`).
 export function apiEnvelope<T extends z.ZodTypeAny>(data: T) {
   return z.object({
     success: z.boolean(),
-    data: data.optional(),
-    error: z.string().optional(),
-    meta: z.object({ total: z.number(), page: z.number(), size: z.number() }).optional(),
+    data: data.nullish(),
+    error: z.string().nullish(),
+    meta: z.object({ total: z.number(), page: z.number(), size: z.number() }).nullish(),
   });
 }
 
