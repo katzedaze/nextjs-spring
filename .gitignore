@@ -8,6 +8,9 @@ dist/
 
 # Env
 .env
+.env.dev
+.env.stg
+.env.prd
 .env.local
 .env.*.local
 docker-compose.override.yml

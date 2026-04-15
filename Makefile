@@ -2,7 +2,9 @@ COMPOSE ?= docker compose
 
 .DEFAULT_GOAL := help
 
-.PHONY: help init up up-d down stop restart build rebuild logs ps \
+.PHONY: help init init-dev init-stg init-prd \
+        up up-d up-dev up-dev-d up-stg up-stg-d up-prd up-prd-d \
+        down down-dev down-stg down-prd stop restart build rebuild logs ps \
         backend-logs frontend-logs db-logs \
         backend-sh frontend-sh db-sh psql \
         test backend-test frontend-test frontend-build clean nuke \
@@ -11,18 +13,54 @@ COMPOSE ?= docker compose
 help: ## このヘルプを表示
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z_-]+:.*##/ {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-init: ## .env を .env.example から作成
-	@test -f .env || cp .env.example .env
+init: ## .env を .env.dev.example から作成 (DEV 既定)
+	@test -f .env || cp .env.dev.example .env
 	@echo ".env ready. Edit secrets before production use."
 
-up: init ## フォアグラウンドで起動 (Ctrl+C で停止)
-	$(COMPOSE) up --build
+init-dev: ## .env.dev を .env.dev.example から作成
+	@test -f .env.dev || cp .env.dev.example .env.dev
+	@echo ".env.dev ready."
 
-up-d: init ## バックグラウンドで起動
-	$(COMPOSE) up -d --build
+init-stg: ## .env.stg を .env.stg.example から作成 (secrets を埋めること)
+	@test -f .env.stg || cp .env.stg.example .env.stg
+	@echo ".env.stg ready. Replace REPLACE_ME placeholders before deploy."
 
-down: ## 停止 + コンテナ削除 (volume は保持)
-	$(COMPOSE) down
+init-prd: ## .env.prd を .env.prd.example から作成 (secrets を埋めること)
+	@test -f .env.prd || cp .env.prd.example .env.prd
+	@echo ".env.prd ready. Replace REPLACE_ME placeholders before deploy."
+
+up: up-dev ## デフォルトは DEV (alias of up-dev)
+
+up-d: up-dev-d ## デフォルトは DEV (alias of up-dev-d)
+
+up-dev: init-dev ## DEV 環境でフォアグラウンド起動
+	$(COMPOSE) --env-file .env.dev up --build
+
+up-dev-d: init-dev ## DEV 環境でバックグラウンド起動
+	$(COMPOSE) --env-file .env.dev up -d --build
+
+up-stg: init-stg ## STG 環境でフォアグラウンド起動
+	$(COMPOSE) --env-file .env.stg up --build
+
+up-stg-d: init-stg ## STG 環境でバックグラウンド起動
+	$(COMPOSE) --env-file .env.stg up -d --build
+
+up-prd: init-prd ## PRD 環境でフォアグラウンド起動
+	$(COMPOSE) --env-file .env.prd up --build
+
+up-prd-d: init-prd ## PRD 環境でバックグラウンド起動
+	$(COMPOSE) --env-file .env.prd up -d --build
+
+down: down-dev ## alias of down-dev
+
+down-dev: ## DEV コンテナ停止 + 削除
+	$(COMPOSE) --env-file .env.dev down
+
+down-stg: ## STG コンテナ停止 + 削除
+	$(COMPOSE) --env-file .env.stg down
+
+down-prd: ## PRD コンテナ停止 + 削除
+	$(COMPOSE) --env-file .env.prd down
 
 stop: ## 停止のみ
 	$(COMPOSE) stop

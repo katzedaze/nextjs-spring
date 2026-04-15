@@ -4,13 +4,16 @@ import { jwtVerify } from "jose";
 
 const TOKEN_COOKIE = "todo_token";
 
-// Read at module scope (middleware runs in Edge runtime — env must be set at build/start time).
+const appEnv = process.env.APP_ENV ?? process.env.NEXT_PUBLIC_APP_ENV ?? "dev";
+const isDev = appEnv === "dev";
+
 const secretEnv = process.env.APP_JWT_SECRET ?? process.env.NEXT_PUBLIC_APP_JWT_SECRET ?? "";
 const SECRET_KEY = secretEnv ? new TextEncoder().encode(secretEnv) : null;
 
 async function isValid(token: string): Promise<boolean> {
   if (!SECRET_KEY) {
-    // Falls back to cookie-presence check if the secret is not available to the edge runtime.
+    // Fail closed in non-dev environments — never trust cookie presence alone.
+    if (!isDev) return false;
     return Boolean(token);
   }
   try {
