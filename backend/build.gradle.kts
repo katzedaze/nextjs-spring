@@ -2,8 +2,8 @@ plugins {
     java
     jacoco
     id("org.springframework.boot") version "3.5.9"
-    id("io.spring.dependency-management") version "1.1.6"
-    id("com.diffplug.spotless") version "6.25.0"
+    id("io.spring.dependency-management") version "1.1.7"
+    id("com.diffplug.spotless") version "7.0.2"
 }
 
 group = "com.example"
@@ -11,7 +11,7 @@ version = "0.1.0"
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     }
 }
 
@@ -48,7 +48,7 @@ dependencies {
 
 dependencyManagement {
     imports {
-        mavenBom("org.testcontainers:testcontainers-bom:1.20.4")
+        mavenBom("org.testcontainers:testcontainers-bom:1.21.3")
     }
 }
 
@@ -58,7 +58,7 @@ tasks.withType<Test> {
 }
 
 jacoco {
-    toolVersion = "0.8.12"
+    toolVersion = "0.8.13"
 }
 
 tasks.jacocoTestReport {
@@ -74,7 +74,6 @@ tasks.jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
-                // Testcontainers が無い環境では下がるため緩めに設定。ローカル/CI で Docker 利用時は 0.80+ を目指す。
                 minimum = "0.60".toBigDecimal()
             }
         }
@@ -84,14 +83,14 @@ tasks.jacocoTestCoverageVerification {
 spotless {
     java {
         target("src/**/*.java")
-        googleJavaFormat("1.22.0")
+        googleJavaFormat("1.28.0")
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
     }
     kotlinGradle {
         target("*.gradle.kts")
-        ktlint("1.2.1")
+        ktlint("1.5.0")
     }
 }
 

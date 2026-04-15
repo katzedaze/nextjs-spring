@@ -5,7 +5,7 @@
 ## スタック
 
 - Frontend: Next.js 16 (App Router) + TypeScript + Tailwind v4 + shadcn/ui
-- Backend: Spring Boot 3.5 (Java 21) + Spring Security + JWT + JPA + Flyway
+- Backend: Spring Boot 3.5 (Java 25 LTS) + Spring Security + JWT + JPA + Flyway
 - DB: PostgreSQL 17
 - 実行環境: Docker Compose
 
