@@ -66,7 +66,7 @@ psql: ## psql で DB に接続
 test: backend-test frontend-test ## 全テスト実行
 
 backend-test: ## backend の統合テスト (Testcontainers, Docker 必須)
-	cd backend && ( [ -x ./gradlew ] || gradle wrapper --gradle-version 8.10 ) && ./gradlew test jacocoTestReport
+	cd backend && ( [ -x ./gradlew ] || gradle wrapper --gradle-version 9.4.1 ) && ./gradlew test jacocoTestReport
 
 frontend-test: ## frontend の単体テスト (Vitest)
 	cd frontend && pnpm install --frozen-lockfile || pnpm install
@@ -82,14 +82,14 @@ lint: backend-lint frontend-lint ## 全プロジェクトで lint
 fmt: backend-fmt frontend-fmt ## 全プロジェクトで format 適用
 
 fmt-check: ## format 差分の確認のみ (CI 用)
-	cd backend && ( [ -x ./gradlew ] || gradle wrapper --gradle-version 8.10 ) && ./gradlew spotlessCheck
+	cd backend && ( [ -x ./gradlew ] || gradle wrapper --gradle-version 9.4.1 ) && ./gradlew spotlessCheck
 	cd frontend && pnpm format:check
 
 backend-lint: ## backend: Spotless チェック
-	cd backend && ( [ -x ./gradlew ] || gradle wrapper --gradle-version 8.10 ) && ./gradlew spotlessCheck
+	cd backend && ( [ -x ./gradlew ] || gradle wrapper --gradle-version 9.4.1 ) && ./gradlew spotlessCheck
 
 backend-fmt: ## backend: Spotless 適用
-	cd backend && ( [ -x ./gradlew ] || gradle wrapper --gradle-version 8.10 ) && ./gradlew spotlessApply
+	cd backend && ( [ -x ./gradlew ] || gradle wrapper --gradle-version 9.4.1 ) && ./gradlew spotlessApply
 
 frontend-lint: ## frontend: ESLint
 	cd frontend && pnpm lint
