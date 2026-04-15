@@ -11,6 +11,8 @@ const MAX_AGE_SECONDS = 60 * 60;
  * development only.
  */
 function shouldMarkSecure(): boolean {
+  // COOKIE_INSECURE is honored only in DEV. STG/PRD always set Secure.
+  if (process.env.APP_ENV && process.env.APP_ENV !== "dev") return true;
   return process.env.COOKIE_INSECURE !== "1";
 }
 

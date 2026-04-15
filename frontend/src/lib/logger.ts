@@ -1,12 +1,15 @@
 import pino from "pino";
 
-/**
- * Server-side logger. Use `log.info` / `log.warn` / `log.error` in route
- * handlers and server actions — do NOT import this in client components
- * (pino is a Node-only module).
- */
+function defaultLevel(): string {
+  const env = process.env.APP_ENV;
+  if (env === "prd") return "warn";
+  if (env === "stg") return "info";
+  if (env === "dev") return "debug";
+  return process.env.NODE_ENV === "production" ? "info" : "debug";
+}
+
 export const log = pino({
-  level: process.env.LOG_LEVEL ?? (process.env.NODE_ENV === "production" ? "info" : "debug"),
+  level: process.env.LOG_LEVEL ?? defaultLevel(),
   base: { service: "todo-frontend" },
   redact: ["password", "token", "authorization", "cookie", "*.password", "*.token"],
 });

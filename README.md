@@ -33,6 +33,28 @@ make up-d      # バックグラウンド起動
 | `make frontend-build` | 型チェック + ビルド |
 | `make nuke` | volume ごと全削除 (DB 消滅) |
 
+## 環境 (DEV / STG / PRD)
+
+`.env` ファイルで 3 つの環境を切り替えられる。
+
+| 環境 | env ファイル | Make ターゲット | Spring プロファイル |
+|------|--------------|-----------------|---------------------|
+| DEV (local) | `.env.dev` (← `.env.dev.example`) | `make up-dev` / `up-dev-d` | `dev` |
+| STG         | `.env.stg` (← `.env.stg.example`) | `make up-stg` / `up-stg-d` | `stg` |
+| PRD         | `.env.prd` (← `.env.prd.example`) | `make up-prd` / `up-prd-d` | `prd` |
+
+- `APP_ENV` が backend の `SPRING_PROFILES_ACTIVE` と frontend の `APP_ENV` / `NEXT_PUBLIC_APP_ENV` に伝搬する。
+- `make up` / `make down` は DEV のエイリアス (後方互換)。
+- 各 `make up-<env>` は `docker compose --env-file .env.<env>` を呼び出す。
+- `.env.dev` / `.env.stg` / `.env.prd` は `.gitignore` 済み。`*.example` テンプレートのみ追跡。
+- Backend の環境別設定は `backend/src/main/resources/application-{dev,stg,prd}.yml` を参照。
+
+STG/PRD では以下が強制される:
+
+- `COOKIE_INSECURE` フラグは無視され、セッション Cookie は常に `Secure`。
+- `APP_JWT_SECRET` 未設定時は middleware が fail-closed で `/login` にリダイレクト。
+- actuator は `/health` のみ。エラーレスポンスにメッセージ / スタックを含めない。
+
 ## 個別開発
 
 ### Backend
